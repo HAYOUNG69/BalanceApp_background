@@ -32,6 +32,7 @@ import android.widget.TextView;
 
 import com.example.GoogleMapAPI.GoogleMapActivity;
 
+
 public class SettingsFragment extends Fragment {
 
     //popup
