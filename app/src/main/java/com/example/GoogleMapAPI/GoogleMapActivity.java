@@ -85,8 +85,8 @@ public class GoogleMapActivity extends AppCompatActivity
     private static final String TAG = "googlemap_example";
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2002;
-    private static final int UPDATE_INTERVAL_MS = 10000;  // 1초=1000  5분으로 고침 = 300000
-    private static final int FASTEST_UPDATE_INTERVAL_MS = 10000; // 0.5초=500 //5분=300초=300000 //5분보다 빨리 검색하지 않는다.
+    private static final int UPDATE_INTERVAL_MS = 40000;  // 1초=1000  5분으로 고침 = 300000
+    private static final int FASTEST_UPDATE_INTERVAL_MS = 40000; // 0.5초=500 //5분=300초=300000 //5분보다 빨리 검색하지 않는다.
     //설명
     //.setInterval(15000) // 15 seconds
     //.setFastestInterval(5000) // 5000ms
@@ -96,7 +96,7 @@ public class GoogleMapActivity extends AppCompatActivity
     private AppCompatActivity mActivity;
     boolean askPermissionOnceAgain = false;
     boolean mRequestingLocationUpdates = false;
-     Location mCurrentLocatiion;
+    Location mCurrentLocatiion;
     boolean mMoveMapByUser = true;
     boolean mMoveMapByAPI = true;
     LatLng currentPosition;
@@ -141,7 +141,6 @@ public class GoogleMapActivity extends AppCompatActivity
         //setContentView(dialog.getCurrentFocus());
 
 
-
         previous_marker = new ArrayList<Marker>();
 
 
@@ -168,8 +167,8 @@ public class GoogleMapActivity extends AppCompatActivity
 
         ///지영수정
         Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-        int width = (int) (display.getWidth()*0.95); //Display 사이즈의 95%
-        int height = (int) (display.getHeight()*0.95);  //Display 사이즈의 95%
+        int width = (int) (display.getWidth() * 0.95); //Display 사이즈의 95%
+        int height = (int) (display.getHeight() * 0.95);  //Display 사이즈의 95%
         getWindow().getAttributes().width = width;
         getWindow().getAttributes().height = height;
         ///
@@ -282,11 +281,10 @@ public class GoogleMapActivity extends AppCompatActivity
         setCurrentLocation(location, markerTitle, markerSnippet);   //마커 생성
         //mCurrentLocatiion = location;
 
-        if(previousPosition == null){  //최초 실행했을 때 (앱을 아예 처음 켰을 때??)  //이 때 가까운 place들이 뜸
+        if (previousPosition == null) {  //최초 실행했을 때 (앱을 아예 처음 켰을 때??)  //이 때 가까운 place들이 뜸
             showPlaceInformation(currentPosition);     //자동으로 place 검색
             previousPosition = currentPosition;
-        }
-        else  {  //previousPosition이 null이 아니면 실행(이전 위치가 존재, 최초 실행이 아닐 때) (previousPosition != null)
+        } else {  //previousPosition이 null이 아니면 실행(이전 위치가 존재, 최초 실행이 아닐 때) (previousPosition != null)
             /*curlat = Math.round(currentPosition.latitude*100000)/100000.0;    //소수 5째자리 까지(오차를 줄이기 위해)
             curlong = Math.round(currentPosition.longitude*100000)/100000.0;  //소수 5째자리 까지(오차를 줄이기 위해)
             prelat = Math.round(previousPosition.latitude*100000)/100000.0;  //소수 5째자리 까지(오차를 줄이기 위해)
@@ -307,8 +305,12 @@ public class GoogleMapActivity extends AppCompatActivity
                  * 이 때 제일 가까운 장소가 타임라인에 넘어가야 함
                  * */
                 showPlaceInformation(currentPosition);     //자동으로 place 검색
-                setDBTimeLine();    //자동으로 db에 넣어주고 가장 가까운 장소를 타임라인으로 넘김
-
+                if (sort_mlist != null) {   //검색이 성공하면
+                    setDBTimeLine();    //자동으로 db에 넣어주고 가장 가까운 장소를 타임라인으로 넘김
+                } else {
+                    Toast toast2 = Toast.makeText(this, "장소검색에 실패하였습니다.", Toast.LENGTH_SHORT);  //50m를 벗어났다는 알림이 핸드폰에 뜸
+                    toast2.show();
+                }
                 previousPosition = currentPosition; //거리 범위를 넘었으니깐 현재 포지션은 다음 setCurrentLocation가 실행될 때 이전 포지션이 된다.
             } else {
                 System.out.println("비슷한 위치");
@@ -717,7 +719,7 @@ public class GoogleMapActivity extends AppCompatActivity
                         Cursor cursor = db.rawQuery("select * from tb_timeline where endtime is NULL", null);
 
                         //아예 처음시작하는 활동인 경우
-                        if (cursor.getCount() == 0 ) {
+                        if (cursor.getCount() == 0) {
                             db.execSQL("insert into tb_timeline (date, place, category, starttime) values (?,?,?,?)",
                                     new String[]{formatDate, title, type, formatTime});
                             return;
@@ -756,61 +758,72 @@ public class GoogleMapActivity extends AppCompatActivity
         });
     }
 
-    public void setDBTimeLine(){   //이 때 db에 장소 이름과 타입이 타임라인에 저장된다.
+    public void setDBTimeLine() {   //이 때 db에 장소 이름과 타입이 타임라인에 저장된다.
         System.out.println("setDBTimeLine시작");
-        MarkerInfo tmp = sort_mlist.get(0);
-        System.out.println(tmp.getPlaceName());
-        String title = tmp.getPlaceName();
-        String type = tmp.getPlaceType();
-        System.out.println("제일 가까운 장소 이름: " + title + "\n제일 가까운 장소 타입: " + type);
 
-        long now = System.currentTimeMillis();
-        Date date = new Date(now);
-        // 시간을 나타냇 포맷을 정한다 ( yyyy/MM/dd 같은 형태로 변형 가능 )
-        SimpleDateFormat sdfdate = new SimpleDateFormat("yyyy/MM/dd");
-        SimpleDateFormat sdftime = new SimpleDateFormat("HH:mm:ss");
-        final String formatDate = sdfdate.format(date);
-        final String formatTime = sdftime.format(date);
 
-        //db 삽입 부분
-        DBHelper helper = new DBHelper(getApplicationContext());
-        SQLiteDatabase db = helper.getWritableDatabase();
-        Cursor cursor = db.rawQuery("select * from tb_timeline where endtime is NULL", null);
+        try {
 
-        //아예 처음시작하는 활동인 경우
-        if (cursor.getCount() == 0 ) {
-            db.execSQL("insert into tb_timeline (date, place, category, starttime) values (?,?,?,?)",
-                    new String[]{formatDate, title, type, formatTime});
-            return;
-        }
-        //전의 활동이 있는경우
-        else {
-            cursor.moveToFirst();
-            String place = cursor.getString(cursor.getColumnIndex("place"));
-            String category = cursor.getString(cursor.getColumnIndex("category"));
-            String starttime = cursor.getString(cursor.getColumnIndex("starttime"));
+            MarkerInfo tmp = sort_mlist.get(0);
+            System.out.println(tmp.getPlaceName());
+            String title = tmp.getPlaceName();
+            String type = tmp.getPlaceType();
+            System.out.println("제일 가까운 장소 이름: " + title + "\n제일 가까운 장소 타입: " + type);
 
-            try {
-                //활동 중 날짜가 넘어가는 경우 ///단 한 활동이 24시간을 넘지 않는다는 가정하에
-                if (sdftime.parse(starttime).getTime() > sdftime.parse(formatTime).getTime()) {
-                    db.execSQL("update tb_timeline set endtime=? where endtime is NULL",
-                            new String[]{"24:00:00"});
-                    db.execSQL("insert into tb_timeline (date, place, category, starttime) values (?,?,?,?)",
-                            new String[]{formatDate, place, category, "00:00:00"});
-                }
-            } catch (ParseException e) {
-                e.printStackTrace();
+            long now = System.currentTimeMillis();
+            Date date = new Date(now);
+            // 시간을 나타냇 포맷을 정한다 ( yyyy/MM/dd 같은 형태로 변형 가능 )
+            SimpleDateFormat sdfdate = new SimpleDateFormat("yyyy/MM/dd");
+            SimpleDateFormat sdftime = new SimpleDateFormat("HH:mm:ss");
+            final String formatDate = sdfdate.format(date);
+            final String formatTime = sdftime.format(date);
+
+            //db 삽입 부분
+            DBHelper helper = new DBHelper(getApplicationContext());
+            SQLiteDatabase db = helper.getWritableDatabase();
+            Cursor cursor = db.rawQuery("select * from tb_timeline where endtime is NULL", null);
+
+            //아예 처음시작하는 활동인 경우
+            if (cursor.getCount() == 0) {
+                db.execSQL("insert into tb_timeline (date, place, category, starttime) values (?,?,?,?)",
+                        new String[]{formatDate, title, type, formatTime});
+                return;
             }
+            //전의 활동이 있는경우
+            else {
+                cursor.moveToFirst();
+                String place = cursor.getString(cursor.getColumnIndex("place"));
+                String category = cursor.getString(cursor.getColumnIndex("category"));
+                String starttime = cursor.getString(cursor.getColumnIndex("starttime"));
 
-            //클릭 동시에 시작시간을 전에 활동 시작시간으로 update
-            db.execSQL("update tb_timeline set endtime=? where endtime is NULL",
-                    new String[]{formatTime});
-            //현재 장소, 카테고리, 현재시간 insert
-            db.execSQL("insert into tb_timeline (date, place, category, starttime) values (?,?,?,?)",
-                    new String[]{formatDate, title, type, formatTime});
+                try {
+                    //활동 중 날짜가 넘어가는 경우 ///단 한 활동이 24시간을 넘지 않는다는 가정하에
+                    if (sdftime.parse(starttime).getTime() > sdftime.parse(formatTime).getTime()) {
+                        db.execSQL("update tb_timeline set endtime=? where endtime is NULL",
+                                new String[]{"24:00:00"});
+                        db.execSQL("insert into tb_timeline (date, place, category, starttime) values (?,?,?,?)",
+                                new String[]{formatDate, place, category, "00:00:00"});
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                //클릭 동시에 시작시간을 전에 활동 시작시간으로 update
+                db.execSQL("update tb_timeline set endtime=? where endtime is NULL",
+                        new String[]{formatTime});
+                //현재 장소, 카테고리, 현재시간 insert
+                db.execSQL("insert into tb_timeline (date, place, category, starttime) values (?,?,?,?)",
+                        new String[]{formatDate, title, type, formatTime});
+            }
+            db.close();
+
+        } catch (IndexOutOfBoundsException e) {
+
+            System.out.println(e);
+
         }
 
-        db.close();
+
     }
 
     public void showMessage(String title, String Message) {

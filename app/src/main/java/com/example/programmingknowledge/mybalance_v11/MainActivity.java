@@ -23,22 +23,16 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.BackgroundService;
-import com.example.BootReceiver;
-
-import com.example.MyAlarm;
+import com.example.GoogleMapAPI.GoogleMapActivity;
+//import com.example.MyAlarm;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -55,14 +49,23 @@ public class MainActivity extends AppCompatActivity {
      */
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     //B
-    private Intent mBackgroundServiceIntent;
-    private BackgroundService mBackgroundService;
+    //private Intent mBackgroundServiceIntent;
+   // private BackgroundService mBackgroundService;
 
     private boolean mAlreadyStartedService = false;
     private TextView mMsgView;
 
     /////////
-    private TextView mTextMessage;
+
+
+    private BroadcastReceiver MyAlarm = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // intent ..
+            intent = new Intent(context, GoogleMapActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,38 +80,47 @@ public class MainActivity extends AppCompatActivity {
         navigation.setSelectedItemId(R.id.nav_home);
 
 
-        /////////track
-        mMsgView = (TextView) findViewById(R.id.msgView);
-        Intent intent = new Intent(this, MyAlarm.class);
+//        /////////track
+//        mMsgView = (TextView) findViewById(R.id.msgView);
+//        Intent intent = new Intent(this, MyAlarm.class);
 
-        PendingIntent pi = PendingIntent.getBroadcast(this.getApplicationContext(),1,intent,0);
-        AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-        am.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),5000,pi);
-
-
-        // BackgroundService
-        mBackgroundService = new BackgroundService(getApplicationContext());
-        mBackgroundServiceIntent = new Intent(getApplicationContext(), mBackgroundService.getClass());
-        // 서비스가 실행 중인지 확인
-        if (!BootReceiver.isServiceRunning(this, mBackgroundService.getClass())) {
-            // 서비스가 실행하고 있지 않는 경우 서비스 실행
-            startService(mBackgroundServiceIntent);
-        }
+//        PendingIntent pi = PendingIntent.getBroadcast(this.getApplicationContext(),1,intent,0);
+//        AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+//        am.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),5000,pi);
 
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                        String latitude = intent.getStringExtra(LocationMonitoringService.EXTRA_LATITUDE);
-                        String longitude = intent.getStringExtra(LocationMonitoringService.EXTRA_LONGITUDE);
+//        // BackgroundService
+//        mBackgroundService = new BackgroundService(getApplicationContext());
+//        mBackgroundServiceIntent = new Intent(getApplicationContext(), mBackgroundService.getClass());
+//        // 서비스가 실행 중인지 확인
+//        if (!BootReceiver.isServiceRunning(this, mBackgroundService.getClass())) {
+//            // 서비스가 실행하고 있지 않는 경우 서비스 실행
+//            startService(mBackgroundServiceIntent);
+//        }
 
-                        if (latitude != null && longitude != null) {
-                            mMsgView.setText(getString(R.string.msg_location_service_started) + "\n Latitude : " + latitude + "\n Longitude: " + longitude);
-                        }
-                    }
-                }, new IntentFilter(LocationMonitoringService.ACTION_LOCATION_BROADCAST)
-        );
+
+
+        IntentFilter stateFilter = new IntentFilter();
+        stateFilter.addAction(LocationMonitoringService.ACTION_LOCATION_MAP); //BluetoothAdapter.ACTION_STATE_CHANGED : 블루투스 상태변화 액션
+
+        registerReceiver(MyAlarm, stateFilter);
+
+
+
+
+//        LocalBroadcastManager.getInstance(this).registerReceiver(
+//                new BroadcastReceiver() {
+//                    @Override
+//                    public void onReceive(Context context, Intent intent) {
+//                        String latitude = intent.getStringExtra(LocationMonitoringService.EXTRA_LATITUDE);
+//                        String longitude = intent.getStringExtra(LocationMonitoringService.EXTRA_LONGITUDE);
+//
+//                        if (latitude != null && longitude != null) {
+//                            mMsgView.setText(getString(R.string.msg_location_service_started) + "\n Latitude : " + latitude + "\n Longitude: " + longitude);
+//                        }
+//                    }
+//                }, new IntentFilter(LocationMonitoringService.ACTION_LOCATION_BROADCAST)
+//        );
         ////////
 
     }
