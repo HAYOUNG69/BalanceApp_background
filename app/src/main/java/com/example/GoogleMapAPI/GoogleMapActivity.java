@@ -168,8 +168,8 @@ public class GoogleMapActivity extends AppCompatActivity
 
         ///지영수정
         Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-        int width = (int) (display.getWidth()*0.95); //Display 사이즈의 95%
-        int height = (int) (display.getHeight()*0.95);  //Display 사이즈의 95%
+        int width = (int) (display.getWidth()*0.8); //Display 사이즈의 95%
+        int height = (int) (display.getHeight()*0.8);  //Display 사이즈의 95%
         getWindow().getAttributes().width = width;
         getWindow().getAttributes().height = height;
         ///
@@ -758,6 +758,16 @@ public class GoogleMapActivity extends AppCompatActivity
 
     public void setDBTimeLine(){   //이 때 db에 장소 이름과 타입이 타임라인에 저장된다.
         System.out.println("setDBTimeLine시작");
+
+
+        if(sort_mlist.isEmpty()){
+            ArrayList<MarkerInfo> sort_mlist = new ArrayList<>();
+            double placeDistance = 0;
+            String[] placeType = {"default"};
+            String placeName = "default";
+            }
+
+
         MarkerInfo tmp = sort_mlist.get(0);
         System.out.println(tmp.getPlaceName());
         String title = tmp.getPlaceName();
@@ -849,9 +859,9 @@ public class GoogleMapActivity extends AppCompatActivity
 }
 
 class MarkerInfo {
-    String placeName;
+    String placeName ;
     String placeType;
-    double distance;
+    double distance ;
 
     MarkerInfo(String placeName, String placeType, double distance) {
         this.placeName = placeName;

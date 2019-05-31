@@ -38,12 +38,12 @@ import android.widget.Toast;
 import com.example.BackgroundService;
 import com.example.BootReceiver;
 
-import com.example.MyAlarm;
+//import com.example.MyAlarm;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
-import com.example.services.LocationMonitoringService;
+//import com.example.services.LocationMonitoringService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       // mTextMessage = (TextView) findViewById(R.id.message);
+        // mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(navListener);
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
@@ -79,11 +79,13 @@ public class MainActivity extends AppCompatActivity {
 
         /////////track
         mMsgView = (TextView) findViewById(R.id.msgView);
-        Intent intent = new Intent(this, MyAlarm.class);
 
-        PendingIntent pi = PendingIntent.getBroadcast(this.getApplicationContext(),1,intent,0);
+        //MyAlarm.class =>BootReceiver.class
+        Intent intent = new Intent(this, BootReceiver.class);
+
+        PendingIntent pi = PendingIntent.getBroadcast(this.getApplicationContext(), 1, intent, 0);
         AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-        am.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),5000,pi);
+        am.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 5000, pi);
 
 
         // BackgroundService
@@ -96,29 +98,32 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+
+        //LocationService =>BackfgroundService 3군데
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
-                        String latitude = intent.getStringExtra(LocationMonitoringService.EXTRA_LATITUDE);
-                        String longitude = intent.getStringExtra(LocationMonitoringService.EXTRA_LONGITUDE);
+                        String latitude = intent.getStringExtra(BackgroundService.EXTRA_LATITUDE);
+                        String longitude = intent.getStringExtra(BackgroundService.EXTRA_LONGITUDE);
 
                         if (latitude != null && longitude != null) {
                             mMsgView.setText(getString(R.string.msg_location_service_started) + "\n Latitude : " + latitude + "\n Longitude: " + longitude);
                         }
                     }
-                }, new IntentFilter(LocationMonitoringService.ACTION_LOCATION_BROADCAST)
+                }, new IntentFilter(BackgroundService.ACTION_LOCATION_BROADCAST)
         );
         ////////
 
     }
+
     private BottomNavigationView.OnNavigationItemSelectedListener navListener =
             new BottomNavigationView.OnNavigationItemSelectedListener() {
                 @Override
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     Fragment selectedFragment = null;
 
-                    switch (item.getItemId()){
+                    switch (item.getItemId()) {
                         case R.id.nav_home:
                             selectedFragment = new HomeFragment();
                             break;
@@ -227,6 +232,10 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
+
+
+
+    //LocationMonitoringService  = > BackgroundSesrvice
     /**
      * Step 3: Start the Location Monitor Service
      */
@@ -240,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
             mMsgView.setText(R.string.msg_location_service_started);
 
             //Start location sharing service to app server.........
-            Intent intent = new Intent(this, LocationMonitoringService.class);
+            Intent intent = new Intent(this, BackgroundService.class);
             startService(intent);
 
             mAlreadyStartedService = true;
@@ -383,13 +392,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    //MyLocationService => BackgroundService
+
     @Override
     public void onDestroy() {
 
 
         //Stop location sharing service to app server.........
 
-        stopService(new Intent(this, LocationMonitoringService.class));
+        stopService(new Intent(this, BackgroundService.class));
         mAlreadyStartedService = false;
         //Ends................................................
 

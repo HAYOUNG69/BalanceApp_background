@@ -27,10 +27,10 @@
             android:name="com.example.ShowMsgActivity"
             android:theme="@style/AppTheme"></activity>
         <!-- 안드로이드 부팅 이벤트 받기 : BroadcastReceiver -->
-        <receiver android:name="com.example.MyAlarm" > <intent-filter>
-            <action android:name="android.intent.action.LOCALE_CHANGED"/>
-        </intent-filter>
-        </receiver>
+        <!--<receiver android:name="com.example.MyAlarm" > <intent-filter>-->
+            <!--<action android:name="android.intent.action.LOCALE_CHANGED"/>-->
+        <!--</intent-filter>-->
+        <!--</receiver>-->
         <receiver
             android:name="com.example.BootReceiver"
             android:enabled="true"
@@ -52,22 +52,16 @@
             </intent-filter>
         </activity>
 
-        <service android:name="com.example.services.LocationMonitoringService" /> <!-- BackgroundService -->
+        <!--<service android:name="com.example.services.LocationMonitoringService" /> &lt;!&ndash; BackgroundService &ndash;&gt;-->
         <service
             android:name="com.example.BackgroundService"
             android:enabled="true"
             android:stopWithTask="false"></service>
 
 
-
-
-
-
-        <activity android:name=".programmingknowledge.mybalance_v11.ResultActivity"></activity>
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCwZVlMDXWR4toPC1ZTZwVb94cJV0IjrHQ" />
+            android:value="AIzaSyALr88wG8gkDB_iGiy6YhugN87euZgGIQA" />
 
         <!--<activity-->
             <!--android:name=".MainActivity"-->

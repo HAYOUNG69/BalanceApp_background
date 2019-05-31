@@ -7,13 +7,18 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
+import android.location.LocationManager;
+import android.os.Looper;
+import com.example.GoogleMapAPI.GoogleMapActivity;
 
 
 public class BootReceiver extends BroadcastReceiver {
 
     private final static String TAG = BootReceiver.class.getSimpleName();
 
-
+//    public static final String TAG = "LOCATION STATE";
+    private static String mLastState;
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
 
 
     // BroadcastReceiver를 상속하여 처리 해줍니다.
@@ -21,6 +26,25 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
 
     public void onReceive(final Context context, Intent intent) {
+
+        Log.d(TAG, "onReceive()"); /** * http://mmarvick.github.io/blog/blog/lollipop-multiple-broadcastreceiver-call-state/ * 2번 호출되는 문제 해결 */
+        String state = intent.getStringExtra(LocationManager.GPS_PROVIDER);
+
+        intent = new Intent(context, GoogleMapActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+        //        if (state.equals(mLastState)) {
+//            return;
+//        } else {
+//            mLastState = state;
+//        }
+//        if (LocationManager.KEY_LOCATION_CHANGED.equals(state)) {
+//            String incomingNumber = intent.getStringExtra(LocationManager.GPS_PROVIDER);
+//            final String phone_number = PhoneNumberUtils.formatNumber(incomingNumber);
+//            Intent serviceIntent = new Intent(context, ShowMsgActivity.class);
+//            serviceIntent.putExtra(ShowMsgActivityer);
+//            context.startService(serviceIntent);
+//        }
 
         // TODO Auto-generated method stub
 
@@ -32,6 +56,9 @@ public class BootReceiver extends BroadcastReceiver {
 
         // 전달된 값이 '부팅완료' 인 경우에만 동작 하도록 조건문을 설정 해줍니다.
 
+        if(action == null) {
+            action = "empty string";
+        }
         if (action.equals("android.intent.action.BOOT_COMPLETED")) {
 
             // TODO
